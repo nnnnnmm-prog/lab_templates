@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <algorithm>
+#include <utility>
 
 template <typename T>
 class Array {
@@ -55,27 +57,36 @@ private:
     T*     data_ = nullptr;
     size_t size_ = 0;
 };
-// ======================== Constructors ========================
+
+// ===================== TODO: Implement methods =====================
 
 template <typename T>
 Array<T>::Array() : data_(nullptr), size_(0) {}
 
 template <typename T>
-Array<T>::Array(size_t size) : data_(new T[size]), size_(size) {}
-
-template <typename T>
-Array<T>::Array(size_t size, const T& value) : data_(new T[size]), size_(size) {
-    for (size_t i = 0; i < size_; ++i) {
-        data_[i] = value;
+Array<T>::Array(size_t size) : data_(nullptr), size_(size) {
+    if (size_ > 0) {
+        data_ = new T[size_]();
     }
 }
 
-// =================== Copy and Move ===========================
+template <typename T>
+Array<T>::Array(size_t size, const T& value) : data_(nullptr), size_(size) {
+    if (size_ > 0) {
+        data_ = new T[size_];
+        for (size_t i = 0; i < size_; ++i) {
+            data_[i] = value;
+        }
+    }
+}
 
 template <typename T>
-Array<T>::Array(const Array& other) : data_(new T[other.size_]), size_(other.size_) {
-    for (size_t i = 0; i < size_; ++i) {
-        data_[i] = other.data_[i];
+Array<T>::Array(const Array& other) : data_(nullptr), size_(other.size_) {
+    if (size_ > 0) {
+        data_ = new T[size_];
+        for (size_t i = 0; i < size_; ++i) {
+            data_[i] = other.data_[i];
+        }
     }
 }
 
@@ -88,12 +99,8 @@ Array<T>::Array(Array&& other) : data_(other.data_), size_(other.size_) {
 template <typename T>
 Array<T>& Array<T>::operator=(const Array& other) {
     if (this != &other) {
-        delete[] data_;
-        size_ = other.size_;
-        data_ = new T[size_];
-        for (size_t i = 0; i < size_; ++i) {
-            data_[i] = other.data_[i];
-        }
+        Array temp(other);
+        swap(temp);
     }
     return *this;
 }
@@ -110,14 +117,10 @@ Array<T>& Array<T>::operator=(Array&& other) {
     return *this;
 }
 
-// =================== Destructor ==============================
-
 template <typename T>
 Array<T>::~Array() {
     delete[] data_;
 }
-
-// =================== Element access ==========================
 
 template <typename T>
 T& Array<T>::operator[](size_t index) {
@@ -159,8 +162,6 @@ const T* Array<T>::data() const {
     return data_;
 }
 
-// =================== Capacity ================================
-
 template <typename T>
 size_t Array<T>::size() const {
     return size_;
@@ -171,8 +172,6 @@ bool Array<T>::empty() const {
     return size_ == 0;
 }
 
-// =================== Operations ==============================
-
 template <typename T>
 void Array<T>::fill(const T& value) {
     for (size_t i = 0; i < size_; ++i) {
@@ -182,21 +181,19 @@ void Array<T>::fill(const T& value) {
 
 template <typename T>
 void Array<T>::swap(Array& other) {
-    T* temp_data = data_;
-    size_t temp_size = size_;
-    data_ = other.data_;
-    size_ = other.size_;
-    other.data_ = temp_data;
-    other.size_ = temp_size;
+    std::swap(data_, other.data_);
+    std::swap(size_, other.size_);
 }
-
-// =================== Comparison ==============================
 
 template <typename T>
 bool Array<T>::operator==(const Array& rhs) const {
-    if (size_ != rhs.size_) return false;
+    if (size_ != rhs.size_) {
+        return false;
+    }
     for (size_t i = 0; i < size_; ++i) {
-        if (data_[i] != rhs.data_[i]) return false;
+        if (!(data_[i] == rhs.data_[i])) {
+            return false;
+        }
     }
     return true;
 }
